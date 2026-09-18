@@ -6,7 +6,7 @@ import {
   ArrowRight,
   BookOpen,
   ChevronRight,
-  Cpu,
+  Cpu, 
   Gamepad2,
   Home,
   Menu,
