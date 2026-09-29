@@ -1,5 +1,5 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
+__pycache__/ 
 *.py[codz]
 *$py.class
 hadoop-3.4.2.tar.gz
