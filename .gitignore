@@ -2,6 +2,7 @@
 __pycache__/
 *.py[codz]
 *$py.class
+hadoop-3.4.2.tar.gz
 
 # C extensions
 *.so
