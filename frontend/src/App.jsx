@@ -37,15 +37,15 @@ function formatPrice(value) {
   return `₹${value.toLocaleString("en-IN")}`;
 }
 
-function ProductCard({ product, onAdd }) {
+function ProductCard({ product, onAdd, onView }) {
   return (
-    <article className="product-card">
+    <article className="product-card" onClick={() => onView?.(product)}> 
       <div className="product-image-wrap">
         <img src={product.image} alt={product.name} className="product-image" />
         <button
           className="heart-button"
           aria-label={`Add ${product.name} to wishlist`}
-          onClick={() => alert("Wishlist feature ready to connect!")}
+          onClick={(e) => { e.stopPropagation(); alert("Wishlist feature ready to connect!"); }}
         >
           ♡
         </button>
@@ -66,7 +66,7 @@ function ProductCard({ product, onAdd }) {
             </div>
           </div>
 
-          <button className="add-button" onClick={() => onAdd(product)}>
+          <button className="add-button" onClick={(e) => { e.stopPropagation(); onAdd(product); }}>
             Add
           </button>
         </div>
@@ -128,11 +128,22 @@ export default function App() {
           fetch(`${API}/products`),
         ]);
 
+        if (!recommendationResponse.ok || !productsResponse.ok) {
+          throw new Error("Failed to load data from backend");
+        }
+
         const recommendationData = await recommendationResponse.json();
         const productData = await productsResponse.json();
 
-        setRecommendations(recommendationData.recommendations);
-        setAllProducts(productData);
+        setRecommendations(
+          Array.isArray(recommendationData.recommendations)
+            ? recommendationData.recommendations
+            : []
+        );
+
+        setAllProducts(
+          Array.isArray(productData) ? productData : []
+        );
       } catch (error) {
         console.error(error);
         alert("Backend is not running. Start it with npm run dev.");
@@ -164,23 +175,53 @@ export default function App() {
     setSearch("");
   };
 
-  const handleAdd = async (product) => {
-    setCartCount((count) => count + 1);
-
+  const trackEvent = async (product, event) => {
     try {
-      await fetch(`${API}/events`, {
+      const response = await fetch(`${API}/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: 101,
-          event: "add_to_cart",
+          event,
           productId: product.id,
           timestamp: new Date().toISOString(),
         }),
       });
-    } catch {
-      // UI still works if the event endpoint is temporarily unavailable.
+
+      if (!response.ok) {
+        throw new Error("Failed to store user event");
+      }
+    } catch (error) {
+      console.error("Event tracking failed:", error);
     }
+  };
+
+  const refreshRecommendations = async () => {
+    try {
+      const response = await fetch(`${API}/recommendations/101`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch recommendations");
+      }
+
+      const data = await response.json();
+
+      setRecommendations(
+        Array.isArray(data.recommendations)
+          ? data.recommendations
+          : []
+      );
+    } catch (error) {
+      console.error("Recommendation refresh failed:", error);
+      setRecommendations([]);
+    }
+  };
+
+  const handleAdd = async (product) => {
+    setCartCount((count) => count + 1);
+
+    await trackEvent(product, "add_to_cart");
+    await refreshRecommendations();
   };
 
   return (
@@ -365,8 +406,13 @@ export default function App() {
             </div>
           ) : (
             <div className="product-grid">
-              {recommendations.map((product) => (
-                <ProductCard key={product.id} product={product} onAdd={handleAdd} />
+              {(recommendations || []).map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAdd={handleAdd}
+                  onView={(item) => trackEvent(item, "view")}
+                />
               ))}
             </div>
           )}
@@ -385,7 +431,12 @@ export default function App() {
 
           <div className="product-grid catalog-grid">
             {visibleProducts.map((product) => (
-              <ProductCard key={product.id} product={product} onAdd={handleAdd} />
+              <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAdd={handleAdd}
+                  onView={(item) => trackEvent(item, "view")}
+                />
             ))}
           </div>
 
