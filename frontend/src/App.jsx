@@ -75,6 +75,70 @@ function ProductCard({ product, onAdd, onView }) {
   );
 }
 
+function RecommendationCard({ product, onAdd, onView }) {
+  return (
+    <article
+      className="recommendation-card"
+      onClick={() => onView?.(product)}
+    >
+      <div className="recommendation-image-wrap">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="product-image"
+        />
+
+        <span className="recommendation-badge">
+          Recommended
+        </span>
+
+        <button
+          className="heart-button"
+          aria-label={`Add ${product.name} to wishlist`}
+          onClick={(e) => {
+            e.stopPropagation();
+            alert("Wishlist feature ready to connect!");
+          }}
+        >
+          ♡
+        </button>
+      </div>
+
+      <div className="product-content">
+        <p className="product-category">{product.category}</p>
+
+        <h3>{product.name}</h3>
+
+        <div className="recommendation-rating">
+          <span className="stars">
+            {"★".repeat(Math.floor(product.rating || 0))}
+          </span>
+
+          <span>{product.rating}</span>
+
+          <span>({product.reviews} reviews)</span>
+        </div>
+
+        <div className="product-bottom">
+          <div className="price">
+            {formatPrice(product.price)}
+          </div>
+
+          <button
+            className="add-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdd(product);
+            }}
+          >
+            Add
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function ProductDetailsModal({ product, onClose, onAdd }) {
   if (!product) return null;
 
@@ -197,6 +261,7 @@ export default function App() {
   const [cartCount, setCartCount] = useState(0);
   const [loginOpen, setLoginOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -224,9 +289,9 @@ export default function App() {
         setAllProducts(
           Array.isArray(productData) ? productData : []
         );
-      } catch (error) {
+      }  catch (error) {
         console.error(error);
-        alert("Backend is not running. Start it with npm run dev.");
+        setError("Unable to load recommendations. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -277,6 +342,7 @@ export default function App() {
   };
 
   const handleViewProduct = (product) => {
+
   setSelectedProduct(product);
   };
 
@@ -486,12 +552,19 @@ export default function App() {
 
           {loading ? (
             <div className="loading-grid">
-              {[1, 2, 3, 4].map((item) => <div className="skeleton" key={item}></div>)}
+              {[1, 2, 3, 4].map((item) => (
+                <div className="skeleton" key={item}></div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="empty-state">
+              <h3>Recommendations unavailable</h3>
+              <p>{error}</p>
             </div>
           ) : (
             <div className="product-grid">
               {(recommendations || []).map((product) => (
-                <ProductCard
+                <RecommendationCard
                   key={product.id}
                   product={product}
                   onAdd={handleAdd}
