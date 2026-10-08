@@ -39,7 +39,7 @@ function formatPrice(value) {
 
 function ProductCard({ product, onAdd, onView }) {
   return (
-    <article className="product-card" onClick={() => onView?.(product)}> 
+    <article className="product-card" onClick={() => onView?.(product)}>
       <div className="product-image-wrap">
         <img src={product.image} alt={product.name} className="product-image" />
         <button
@@ -75,6 +75,85 @@ function ProductCard({ product, onAdd, onView }) {
   );
 }
 
+function ProductDetailsModal({ product, onClose, onAdd }) {
+  if (!product) return null;
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div
+        className="product-details-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className="modal-close"
+          onClick={onClose}
+          aria-label="Close product details"
+        >
+          <X size={19} />
+        </button>
+
+        <div className="product-details-image">
+          <img
+            src={product.image}
+            alt={product.name}
+          />
+        </div>
+
+        <div className="product-details-content">
+          <p className="product-category">{product.category}</p>
+
+          <h2>{product.name}</h2>
+
+          <div className="product-details-rating">
+            <span className="stars">
+              {"★".repeat(Math.floor(product.rating || 0))}
+            </span>
+            <span>{product.rating || 0} rating</span>
+          </div>
+
+          <div className="product-details-price">
+            {formatPrice(product.price)}
+          </div>
+
+          <p className="product-details-description">
+            Explore this product and discover why it is recommended
+            by ShopSmart.
+          </p>
+
+          <div className="product-details-info">
+            <div>
+              <strong>Category</strong>
+              <span>{product.category}</span>
+            </div>
+
+            <div>
+              <strong>Availability</strong>
+              <span>Available</span>
+            </div>
+          </div>
+
+          <button
+            className="product-details-add"
+            onClick={() => {
+              onAdd(product);
+              onClose();
+            }}
+          >
+            <ShoppingBag size={18} />
+            Add to Cart
+          </button>
+
+          <button
+            className="product-details-continue"
+            onClick={onClose}
+          >
+            Continue Shopping
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 function LoginModal({ onClose }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -119,6 +198,7 @@ export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     async function loadData() {
@@ -194,6 +274,10 @@ export default function App() {
     } catch (error) {
       console.error("Event tracking failed:", error);
     }
+  };
+
+  const handleViewProduct = (product) => {
+  setSelectedProduct(product);
   };
 
   const refreshRecommendations = async () => {
@@ -411,7 +495,7 @@ export default function App() {
                   key={product.id}
                   product={product}
                   onAdd={handleAdd}
-                  onView={(item) => trackEvent(item, "view")}
+                  onView={handleViewProduct}
                 />
               ))}
             </div>
@@ -435,7 +519,7 @@ export default function App() {
                   key={product.id}
                   product={product}
                   onAdd={handleAdd}
-                  onView={(item) => trackEvent(item, "view")}
+                  onView={handleViewProduct}
                 />
             ))}
           </div>
@@ -459,6 +543,13 @@ export default function App() {
       </footer>
 
       {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
+        {selectedProduct && (
+          <ProductDetailsModal
+            product={selectedProduct}
+            onClose={() => setSelectedProduct(null)}
+            onAdd={handleAdd}
+          />
+        )}
     </div>
   );
 }
