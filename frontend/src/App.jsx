@@ -261,6 +261,7 @@ export default function App() {
   const [cartCount, setCartCount] = useState(0);
   const [loginOpen, setLoginOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -288,9 +289,9 @@ export default function App() {
         setAllProducts(
           Array.isArray(productData) ? productData : []
         );
-      } catch (error) {
+      }  catch (error) {
         console.error(error);
-        alert("Backend is not running. Start it with npm run dev.");
+        setError("Unable to load recommendations. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -551,7 +552,14 @@ export default function App() {
 
           {loading ? (
             <div className="loading-grid">
-              {[1, 2, 3, 4].map((item) => <div className="skeleton" key={item}></div>)}
+              {[1, 2, 3, 4].map((item) => (
+                <div className="skeleton" key={item}></div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="empty-state">
+              <h3>Recommendations unavailable</h3>
+              <p>{error}</p>
             </div>
           ) : (
             <div className="product-grid">
