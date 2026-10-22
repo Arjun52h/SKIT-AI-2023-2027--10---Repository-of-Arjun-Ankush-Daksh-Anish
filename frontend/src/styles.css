@@ -1190,3 +1190,12 @@ footer p {
 .recommendation-rating .stars {
   color: #f4b400;
 }
+.recommendation-error {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid #f0caca;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #a12b2b;
+  font-size: 13px;
+}
