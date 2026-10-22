@@ -6,7 +6,7 @@ import {
   ArrowRight,
   BookOpen,
   ChevronRight,
-  Cpu, 
+  Cpu,
   Gamepad2,
   Home,
   Menu,
@@ -280,6 +280,7 @@ export default function App() {
         const recommendationData = await recommendationResponse.json();
         const productData = await productsResponse.json();
 
+
         setRecommendations(
           Array.isArray(recommendationData.recommendations)
             ? recommendationData.recommendations
@@ -355,6 +356,7 @@ export default function App() {
       }
 
       const data = await response.json();
+      setError("");
 
       setRecommendations(
         Array.isArray(data.recommendations)
@@ -363,9 +365,9 @@ export default function App() {
       );
     } catch (error) {
       console.error("Recommendation refresh failed:", error);
-      setRecommendations([]);
+      setError("Couldn't refresh recommendations. Please try again.");
     }
-  };
+};
 
   const handleAdd = async (product) => {
     setCartCount((count) => count + 1);
@@ -550,20 +552,22 @@ export default function App() {
             </div>
           </div>
 
+
+          {!loading && error && recommendations.length > 0 && (
+           <p className="recommendation-error" role="alert">
+            {error}
+           </p>
+          )}
+
           {loading ? (
             <div className="loading-grid">
               {[1, 2, 3, 4].map((item) => (
                 <div className="skeleton" key={item}></div>
               ))}
             </div>
-          ) : error ? (
-            <div className="empty-state">
-              <h3>Recommendations unavailable</h3>
-              <p>{error}</p>
-            </div>
           ) : (
             <div className="product-grid">
-              {(recommendations || []).map((product) => (
+             {recommendations.map((product) => (
                 <RecommendationCard
                   key={product.id}
                   product={product}
