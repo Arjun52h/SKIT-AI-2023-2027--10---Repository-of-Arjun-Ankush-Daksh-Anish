@@ -1,21 +1,26 @@
-#!/usr/bin/env python3
 
 import sys
 import csv
 
 reader = csv.reader(sys.stdin)
 
-for row in reader:
+weights = {
+    "view": 1,
+    "addtocart": 3,
+    "transaction": 5
+}
 
-    # Skip CSV header
-    if row and row[0] == "user_id":
+for row in reader:
+    if not row or row[0] == "user_id":
         continue
 
-    # Ignore malformed rows
     if len(row) < 3:
         continue
 
     user_id = row[0]
     product_id = row[1]
+    event = row[2].strip().lower()
 
-    print(f"{user_id}\t{product_id}\t1")
+    if event in weights:
+        score = weights[event]
+        print(f"{user_id}\t{product_id}\t{score}")
