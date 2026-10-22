@@ -342,8 +342,8 @@ export default function App() {
   };
 
   const handleViewProduct = (product) => {
-
   setSelectedProduct(product);
+  trackEvent(product, "view");
   };
 
   const refreshRecommendations = async () => {
