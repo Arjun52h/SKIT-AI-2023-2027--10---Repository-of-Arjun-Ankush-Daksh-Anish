@@ -224,3 +224,10 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 data/interactions_clean.csv
+
+
+# Generated Hadoop recommendation outputs
+output/weighted_scores.tsv
+output/collaborative_recommendations.csv
+# Hadoop checksum files
+*.crc
