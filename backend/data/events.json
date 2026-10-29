@@ -1,0 +1,68 @@
+[
+  {
+    "userId": 101,
+    "productId": 10,
+    "event": "add_to_cart",
+    "timestamp": "2026-10-07T09:53:18.262Z"
+  },
+  {
+    "userId": 101,
+    "productId": 8,
+    "event": "add_to_cart",
+    "timestamp": "2026-10-09T05:05:42.556Z"
+  },
+  {
+    "userId": 101,
+    "productId": 6,
+    "event": "add_to_cart",
+    "timestamp": "2026-10-09T05:05:44.252Z"
+  },
+  {
+    "userId": 101,
+    "productId": 5,
+    "event": "view",
+    "timestamp": "2026-10-09T05:05:54.511Z"
+  },
+  {
+    "userId": 101,
+    "productId": 5,
+    "event": "view",
+    "timestamp": "2026-10-09T05:05:55.288Z"
+  },
+  {
+    "userId": 101,
+    "productId": 1,
+    "event": "view",
+    "timestamp": "2026-10-09T05:05:56.267Z"
+  },
+  {
+    "userId": 101,
+    "productId": 2,
+    "event": "add_to_cart",
+    "timestamp": "2026-10-29T11:31:39.191Z"
+  },
+  {
+    "userId": 101,
+    "productId": 2,
+    "event": "add_to_cart",
+    "timestamp": "2026-10-29T11:31:39.907Z"
+  },
+  {
+    "userId": 101,
+    "productId": 2,
+    "event": "add_to_cart",
+    "timestamp": "2026-10-29T11:31:40.184Z"
+  },
+  {
+    "userId": 101,
+    "productId": 2,
+    "event": "add_to_cart",
+    "timestamp": "2026-10-29T11:31:40.308Z"
+  },
+  {
+    "userId": 101,
+    "productId": 2,
+    "event": "add_to_cart",
+    "timestamp": "2026-10-29T11:31:40.525Z"
+  }
+]
