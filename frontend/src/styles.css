@@ -1199,3 +1199,9 @@ footer p {
   color: #a12b2b;
   font-size: 13px;
 }
+.recommendation-empty {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}

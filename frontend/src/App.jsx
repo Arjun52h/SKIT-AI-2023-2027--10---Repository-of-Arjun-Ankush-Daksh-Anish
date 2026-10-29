@@ -558,16 +558,23 @@ export default function App() {
             {error}
            </p>
           )}
-
           {loading ? (
             <div className="loading-grid">
               {[1, 2, 3, 4].map((item) => (
                 <div className="skeleton" key={item}></div>
               ))}
             </div>
+          ) : error && recommendations.length === 0 ? (
+            <p className="recommendation-error" role="alert">
+              {error}
+            </p>
+          ) : recommendations.length === 0 ? (
+            <p className="recommendation-empty">
+              No recommendations available right now. Browse our products to discover something you like.
+            </p>
           ) : (
             <div className="product-grid">
-             {recommendations.map((product) => (
+              {recommendations.map((product) => (
                 <RecommendationCard
                   key={product.id}
                   product={product}
@@ -577,6 +584,7 @@ export default function App() {
               ))}
             </div>
           )}
+
         </section>
 
         <section className="catalog-section">
