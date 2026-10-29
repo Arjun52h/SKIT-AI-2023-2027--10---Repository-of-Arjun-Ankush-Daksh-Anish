@@ -1,0 +1,62 @@
+import csv
+from collections import defaultdict
+
+DATA = "data/interactions_clean.csv"
+RECOMMENDATIONS = "output/train_top5_recommendations.csv"
+CUTOFF = "2015-09-01"
+K = 5
+
+train_seen = defaultdict(set)
+test_items = defaultdict(set)
+recommended = defaultdict(list)
+
+with open(DATA, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+        user = row["user_id"]
+        item = row["product_id"]
+        date = row["datetime"][:10]
+
+        if date < CUTOFF:
+            train_seen[user].add(item)
+        else:
+            test_items[user].add(item)
+
+with open(RECOMMENDATIONS, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+        user = row["user_id"]
+        item = row["product_id"]
+
+        if item not in train_seen[user]:
+            recommended[user].append(item)
+
+eligible = [
+    user for user in test_items
+    if user in train_seen and test_items[user]
+]
+
+precision_sum = 0.0
+recall_sum = 0.0
+hits = 0
+evaluated = 0
+
+for user in eligible:
+    recs = recommended.get(user, [])[:K]
+    if not recs:
+        continue
+
+    relevant = len(set(recs) & test_items[user])
+    precision_sum += relevant / K
+    recall_sum += relevant / len(test_items[user])
+    hits += relevant > 0
+    evaluated += 1
+
+print("\n=== Collaborative Recommendation Evaluation ===")
+print("Eligible test users:", len(eligible))
+print("Users with recommendations evaluated:", evaluated)
+
+if evaluated:
+    print(f"Precision@{K}: {precision_sum / evaluated:.6f}")
+    print(f"Recall@{K}:    {recall_sum / evaluated:.6f}")
+    print(f"HitRate@{K}:   {hits / evaluated:.6f}")
+else:
+    print("No eligible users with recommendations found.")

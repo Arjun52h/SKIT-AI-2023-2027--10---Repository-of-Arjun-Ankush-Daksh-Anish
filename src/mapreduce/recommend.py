@@ -3,7 +3,7 @@ from collections import defaultdict, Counter
 import csv
 import os
 
-INPUT_FILE = "output/weighted_scores.tsv"
+INPUT_FILE = "output/train_weighted_scores.tsv"
 OUTPUT_FILE = "output/top5_recommendations.csv"
 
 # Start with a manageable sample for testing.

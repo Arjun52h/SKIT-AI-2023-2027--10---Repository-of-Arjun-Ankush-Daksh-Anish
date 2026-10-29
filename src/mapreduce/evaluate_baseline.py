@@ -1,0 +1,76 @@
+import csv
+from collections import defaultdict
+
+DATA = "data/interactions_clean.csv"
+CUTOFF = "2015-09-01"
+K = 5
+
+train_seen = defaultdict(set)
+test_items = defaultdict(set)
+popularity = defaultdict(int)
+
+weights = {"view": 1, "addtocart": 3, "transaction": 5}
+
+with open(DATA, newline="", encoding="utf-8") as f:
+    reader = csv.DictReader(f)
+
+    for row in reader:
+        user = row["user_id"]
+        item = row["product_id"]
+        date = row["datetime"][:10]
+        event = row["event"].strip().lower() if "event" in row else "view"
+
+        if date < CUTOFF:
+            train_seen[user].add(item)
+            popularity[item] += weights.get(event, 1)
+        else:
+            test_items[user].add(item)
+
+for user in test_items:
+    test_items[user] -= train_seen.get(user, set())
+
+top_items = sorted(
+    popularity.items(),
+    key=lambda x: x[1],
+    reverse=True
+)
+
+eligible_users = [
+    user for user in test_items
+    if user in train_seen and test_items[user]
+]
+
+hits = 0
+precision_sum = 0.0
+recall_sum = 0.0
+evaluated = 0
+
+for user in eligible_users:
+    recommendations = []
+
+    for item, score in top_items:
+        if item not in train_seen[user]:
+            recommendations.append(item)
+        if len(recommendations) == K:
+            break
+
+    if not recommendations:
+        continue
+
+    relevant = len(set(recommendations) & test_items[user])
+    hits += relevant > 0
+    precision_sum += relevant / K
+    recall_sum += relevant / len(test_items[user])
+    evaluated += 1
+
+print("\n=== Popularity Baseline Evaluation ===")
+print("Training cutoff:", CUTOFF)
+print("Test users with prior history:", len(eligible_users))
+print("Users evaluated:", evaluated)
+
+if evaluated:
+    print(f"Precision@{K}: {precision_sum / evaluated:.6f}")
+    print(f"Recall@{K}:    {recall_sum / evaluated:.6f}")
+    print(f"HitRate@{K}:   {hits / evaluated:.6f}")
+else:
+    print("No eligible users found; check the dataset and date split.")
