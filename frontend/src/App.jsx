@@ -316,10 +316,18 @@ export default function App() {
     });
   }, [allProducts, activeCategory, search]);
 
-  const handleCategory = (category) => {
-    setActiveCategory(category);
-    setSearch("");
-  };
+  
+const handleCategory = (category) => {
+  setActiveCategory(category);
+  setSearch("");
+
+  setTimeout(() => {
+    document
+      .getElementById("catalog")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 100);
+};
+
 
   const trackEvent = async (product, event) => {
     try {
@@ -587,7 +595,7 @@ export default function App() {
 
         </section>
 
-        <section className="catalog-section">
+        <section className="catalog-section" id="catalog">
           <div className="catalog-heading">
             <div>
               <div className="eyebrow">EXPLORE</div>
