@@ -1,5 +1,9 @@
 import express from "express";
 import cors from "cors";
+import { readFileSync } from "fs";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import {
   getBehaviorRecommendations,
@@ -22,9 +26,62 @@ app.use(cors());
 app.use(express.json());
 
 
+
+const HADOOP_RECOMMENDATIONS_FILE = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "data",
+  "hadoop_recommendations.csv"
+);
+
+function getHadoopRecommendations(userId, products, limit = 4) {
+  if (!fs.existsSync(HADOOP_RECOMMENDATIONS_FILE)) {
+    return [];
+  }
+
+  const lines = fs
+    .readFileSync(HADOOP_RECOMMENDATIONS_FILE, "utf8")
+    .trim()
+    .split(/\r?\n/);
+
+  return lines
+    .slice(1)
+    .map((line) => line.split(","))
+    .filter(
+      (parts) =>
+        parts.length >= 4 &&
+        Number(parts[0]) === Number(userId)
+    )
+    .sort((a, b) => Number(a[1]) - Number(b[1]))
+    .slice(0, limit)
+    .map((parts) => {
+      const productId = Number(parts[2]);
+      const score = Number(parts[3]);
+      const product = products.find(
+        (item) => Number(item.id) === productId
+      );
+
+      return product
+        ? { ...product, recommendationScore: score }
+        : { id: productId, recommendationScore: score };
+    });
+}
 // =====================================
 // Product catalog
 // =====================================
+
+const PRODUCT_CATALOG_FILE = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "data",
+  "product_catalog.json"
+);
+
+const productCatalog = JSON.parse(
+  fs.readFileSync(PRODUCT_CATALOG_FILE, "utf8")
+);
+
+const productCatalogById = new Map(
+  productCatalog.map((product) => [product.id, product])
+);
 
 const products = [
 
@@ -232,40 +289,28 @@ app.get(
 // Recommendations
 // =====================================
 
-app.get(
-  "/api/recommendations/:userId",
-  (req, res) => {
+app.get("/api/recommendations/:userId", (req, res) => {
+  const userId = Number(req.params.userId);
 
-    const userId =
-      Number(
-        req.params.userId
-      );
-
-
-    const recommendations =
-      getBehaviorRecommendations(
-        userId,
-        products,
-        4
-      );
-
-
-    res.json({
-
-      userId,
-
-      algorithm:
-        "Weighted User Behaviour + Category Similarity",
-
-      hadoopReady:
-        true,
-
-      recommendations
-
+  if (!Number.isFinite(userId)) {
+    return res.status(400).json({
+      error: "Invalid user ID"
     });
-
   }
-);
+
+  const recommendations = getHadoopRecommendations(
+    userId,
+    products,
+    4
+  );
+
+  res.json({
+    userId,
+    algorithm: "Hadoop MapReduce + Collaborative Filtering",
+    source: "hadoop_recommendations.csv",
+    recommendations
+  });
+});
 
 
 // =====================================
