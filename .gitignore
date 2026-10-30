@@ -231,3 +231,6 @@ output/weighted_scores.tsv
 output/collaborative_recommendations.csv
 # Hadoop checksum files
 *.crc
+data/train_interactions.csv
+output/train_weighted_scores.tsv
+output/train_top5_recommendations.csv
