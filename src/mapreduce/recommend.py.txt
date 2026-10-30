@@ -1,0 +1,115 @@
+import csv
+from collections import defaultdict, Counter
+
+INPUT_FILE = "output/train_weighted_scores.tsv"
+OUTPUT_FILE = "output/top5_recommendations.csv"
+
+MAX_USERS = 5000
+TOP_N = 5
+SIMILAR_USERS_LIMIT = 20
+
+
+def load_scores(filename):
+    user_items = defaultdict(dict)
+
+    with open(filename, encoding="utf-8") as f:
+        for line in f:
+            parts = line.strip().split("\t")
+
+            if len(parts) != 3:
+                continue
+
+            user, product, score = parts
+
+            try:
+                user_items[user][product] = float(score)
+            except ValueError:
+                continue
+
+    return user_items
+
+
+def generate_recommendations(user_items):
+    recommendations = []
+
+    users = list(user_items.keys())[:MAX_USERS]
+
+    for user in users:
+        user_products = set(user_items[user].keys())
+
+        similar_users = []
+
+        for other_user, other_items in user_items.items():
+            if other_user == user:
+                continue
+
+            common = user_products.intersection(other_items.keys())
+
+            if common:
+                similar_users.append(
+                    (other_user, len(common))
+                )
+
+        similar_users.sort(
+            key=lambda x: x[1],
+            reverse=True
+        )
+
+        similar_users = similar_users[:SIMILAR_USERS_LIMIT]
+
+        candidate_scores = defaultdict(float)
+
+        for similar_user, similarity in similar_users:
+            for product, score in user_items[similar_user].items():
+
+                if product not in user_products:
+                    candidate_scores[product] += score * similarity
+
+        top_products = sorted(
+            candidate_scores.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )[:TOP_N]
+
+        for rank, (product, score) in enumerate(top_products, 1):
+            recommendations.append({
+                "user_id": user,
+                "rank": rank,
+                "product_id": product,
+                "score": round(score, 4)
+            })
+
+    return recommendations
+
+
+def save_recommendations(recommendations, filename):
+    with open(filename, "w", newline="", encoding="utf-8") as f:
+        fieldnames = [
+            "user_id",
+            "rank",
+            "product_id",
+            "score"
+        ]
+
+        writer = csv.DictWriter(
+            f,
+            fieldnames=fieldnames
+        )
+
+        writer.writeheader()
+        writer.writerows(recommendations)
+
+
+if __name__ == "__main__":
+    user_items = load_scores(INPUT_FILE)
+
+    recommendations = generate_recommendations(user_items)
+
+    save_recommendations(
+        recommendations,
+        OUTPUT_FILE
+    )
+
+    print("Recommendations saved to", OUTPUT_FILE)
+    print("Users processed:", min(len(user_items), MAX_USERS))
+    print("Total recommendations:", len(recommendations))
