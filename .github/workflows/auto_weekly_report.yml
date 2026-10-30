@@ -1,53 +1,91 @@
-name: Weekly Progress Report Auto-Commit
+
+name: Project Progress Reports (Weekly & Cumulative)
 
 on:
   schedule:
-    # Runs every Thursday at 11:59 PM IST (which corresponds to 18:29 UTC)
-    # Cron format: min hour day-of-month month day-of-week (4 = Thursday)
+    # Every Thursday at 11:59 PM IST
     - cron: '29 18 * * 4'
 
-  workflow_dispatch: # Allows manual trigger anytime from the Actions tab
+  workflow_dispatch:
+    inputs:
+      report_type:
+        description: 'Select which report to generate'
+        required: true
+        type: choice
+        default: both
+        options:
+          - weekly
+          - cumulative
+          - both
 
 permissions:
   contents: write
 
 jobs:
-  generate-and-commit:
+  generate-reports:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository with Full Git History
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
-      - name: Install PDF & Graph Dependencies
+      - name: Install Dependencies
         run: |
-          pip install reportlab matplotlib
+          python -m pip install reportlab matplotlib
 
-      - name: Generate Weekly PDF Report
+      - name: Generate Selected Reports
+        env:
+          REPORT_TYPE: ${{ github.event_name == 'schedule' && 'weekly' || inputs.report_type || 'both' }}
         run: |
-          python reports/generate_report.py weekly
+          mkdir -p weekly_reports final_reports
 
-      - name: Move PDF to Weekly Reports Directory & Commit to Repository
+          if [ "$REPORT_TYPE" = "weekly" ] || [ "$REPORT_TYPE" = "both" ]; then
+            echo "Generating Weekly Report..."
+            python reports/generate_report.py weekly
+
+            shopt -s nullglob
+            files=( *_Weekly_Progress_Report_Form-3_*.pdf )
+
+            if [ ${#files[@]} -eq 0 ]; then
+              echo "ERROR: Weekly PDF was not generated."
+              exit 1
+            fi
+
+            mv "${files[@]}" weekly_reports/
+          fi
+
+          if [ "$REPORT_TYPE" = "cumulative" ] || [ "$REPORT_TYPE" = "both" ]; then
+            echo "Generating Cumulative Report..."
+            python reports/generate_report.py cumulative
+
+            shopt -s nullglob
+            files=( *_Final_Report_*.pdf )
+
+            if [ ${#files[@]} -eq 0 ]; then
+              echo "ERROR: Cumulative PDF was not generated."
+              exit 1
+            fi
+
+            mv "${files[@]}" final_reports/
+          fi
+
+      - name: Commit and Push Reports
         run: |
-          mkdir -p weekly_reports
-          mv *_Weekly_Progress_Report_Form-3_*.pdf weekly_reports/
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add weekly_reports/ final_reports/
 
-          git add weekly_reports/
-
-          if git diff --staged --quiet; then
-            echo "No new changes or reports to commit."
+          if git diff --cached --quiet; then
+            echo "No new reports to commit."
           else
-            git commit -m "docs: archive Form-3 weekly progress report [skip ci]"
-            git push
+            git commit -m "docs: update project progress reports [skip ci]"
+            git push origin HEAD:main
           fi
